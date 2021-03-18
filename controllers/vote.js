@@ -10,10 +10,12 @@ const vote = expressAsyncHandler(async (req, res) => {
   const user = req.body.user;
   const nin = req.body.nin;
 
+  // looks for the nin in the database
   const validNin = await Nin.findOne({ nin });
 
   if (!validNin) throw new Error("No Nin found");
 
+  // looks fir the valid candidate
   const validCandidate = await PollOption.findById(req.body.id);
 
   if (!validCandidate) {
@@ -21,6 +23,7 @@ const vote = expressAsyncHandler(async (req, res) => {
     throw new Error("Candidates not valid");
   }
 
+  // looks for the valid voter Id
   const validVoter = await User.findOne({ voterId });
 
   if (!validVoter) {
@@ -28,6 +31,7 @@ const vote = expressAsyncHandler(async (req, res) => {
     throw new Error("Bad voterId request");
   }
 
+  // Checks to see if the voter is a registered user
   const validUser = await User.findById(user);
 
   if (!validUser) {
@@ -35,97 +39,72 @@ const vote = expressAsyncHandler(async (req, res) => {
     throw new Error("Bad User Id");
   }
 
+  // if the candidate exists
   if (validCandidate) {
+    // Check for an existing vote
     const voteExists = await Vote.findOne({
       user: req.body.user,
       poll: req.params.poll_id,
     });
 
+    // if the voting details exists then return an error cos the user has voted before
     if (voteExists) {
       res.status(400);
       throw new Error("User has voted before");
     } else {
+      // else vote the candidate with the user's details
       const vote = new Vote({
         user: req.body.user,
         pollOption: validCandidate._id,
         poll: req.params.poll_id,
       });
 
+      // async vote to save
       const validVote = await vote.save();
+
       if (!validVote) throw new Error("Could not save vote");
+
       if (validVote) {
+        // if the vote is saved then check the
+        //  candidate voted for and add the user id to it
         validCandidate.votes.push(vote);
+
+        // save the valid candidate too
         const savedVoteCount = await validCandidate.save();
-        if (!savedVoteCount)
-          throw new Error("Could not save the  updated vote");
+
+        if (!savedVoteCount) throw new Error("Could not save the updated vote");
+
         if (savedVoteCount) {
-          res.status(200);
-          res.json({
-            type: "Vote++",
-            candidate: savedVoteCount.value,
-          });
+          // if the vote is saved then check the poll count and then update the count ++
+          const updatedPollCount = await Poll.findByIdAndUpdate(
+            {
+              _id: req.params.poll_id,
+            },
+            {
+              $inc: {
+                count: 1,
+              },
+            },
+            {
+              new: true,
+            }
+          );
+
+          if (updatedPollCount) {
+            res.status(200);
+            res.json({
+              type: "Vote++",
+              candidate: savedVoteCount.value,
+              message: "Poll Count Updated",
+            });
+          } else {
+            res.status(400);
+            throw new Error("Can't Update poll Count");
+          }
         }
       }
     }
   }
-
-  // PollOption.findById(req.body.id, async (err, option) => {
-
-  //   Vote.findOne(
-  //     {
-  //       user: req.body.user,
-  //       poll: req.params.poll_id,
-  //     },
-  //     (err, v) => {
-  //       if (v)
-  //         return res.status(400).json({
-  //           type: "reduce",
-  //           pollOption: option.value,
-  //           message:
-  //             "See your big head ! BASTARD have you not voted before, ode oshi",
-  //         });
-
-  //       const vote = new Vote({
-  //         user: req.body.user,
-  //         pollOption: option._id,
-  //         poll: req.params.poll_id,
-  //       });
-
-  //       vote.save((err, newVote) => {
-  //         if (err) throw new Error("Unable to save");
-  //         option.votes.push(newVote);
-  //         option.save((err, newOption) => {
-  //           if (err) return res.send(err);
-  //           return res.status(200).json({
-  //             type: "increase",
-  //             pollOption: newOption.value,
-  //           });
-  //         });
-  //       });
-  //       if (err) throw new Error(err);
-  //     }
-  //   );
-  // });
 });
-
-const updatePollCount = (req, res) => {
-  Poll.findOneAndUpdate(
-    {
-      _id: req.params.poll_id,
-    },
-    {
-      $inc: {
-        count: 1,
-      },
-    },
-    {
-      new: true,
-    },
-    (err, poll) => {
-      if (err) return res.send(err);
-      return res.json(poll);
-    }
-  );
-};
 
 export { vote, updatePollCount };
