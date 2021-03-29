@@ -6,7 +6,8 @@
   "type": "module",
   "scripts": {
     "server":"nodemon server.js",
-    "dev":"nodemon npm run server"
+    "dev":"nodemon npm run server",
+    "start":"node server.js"
   },
   "author": "Andrew Samuel and Group 4",
   "license": "MIT",
@@ -19,5 +20,8 @@
     "express-async-handler": "^1.1.4",
     "jsonwebtoken": "^8.5.1",
     "mongoose": "^5.11.15"
+  },
+  "engines": {
+    "node":"15.0.1"
   }
 }

@@ -1,4 +1,5 @@
 import expressAsyncHandler from "express-async-handler";
+
 import Nin from "../models/ninSchema.js";
 import PollOption from "../models/optionSchema.js";
 import Poll from "../models/pollSchema.js";
@@ -107,4 +108,4 @@ const vote = expressAsyncHandler(async (req, res) => {
   }
 });
 
-export { vote, updatePollCount };
+export { vote };
