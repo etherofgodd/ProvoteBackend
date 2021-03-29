@@ -39,6 +39,12 @@ app.use(
 app.use(cors());
 
 // routes
+app.get("/", (req, res) =>
+  res.json({
+    note: "Welcome to Provote",
+    message: "Election has not been easier",
+  })
+);
 app.use("/api/category", categoryRoutes);
 app.use("/api/polls", pollroutes);
 app.use("/api/vote", voteRoutes);
