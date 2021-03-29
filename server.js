@@ -25,7 +25,7 @@ dotenv.config();
 connectDb();
 
 const PORT = process.env.PORT || 3030;
-const HOSTNAME = process.env.HOSTNAME;
+// const HOSTNAME = process.env.HOSTNAME;
 
 console.log("process.env.PORT :>> ", process.env.PORT);
 
@@ -45,9 +45,7 @@ app.use("/api/vote", voteRoutes);
 app.use("/api/nin", ninRoutes);
 app.use("/api/users", userRoutes);
 
-app.listen(PORT, HOSTNAME, () =>
-  console.log(`Server running on ${HOSTNAME}::${PORT}`.yellow.bold)
-);
+app.listen(PORT, () => console.log(`Server running on::${PORT}`.yellow.bold));
 
 // app middlewares
 app.use(notFound);
